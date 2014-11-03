@@ -1,41 +1,40 @@
 package uca.workshop.game;
 
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-public class Plane extends InputAdapter {
+public class Plane extends Entity {
 	private static final Vector2 GRAVITY = new Vector2 (0,-1f);
-	private static final float PLANE_JUMP_IMPULSE = 25f;
+	
 	public static final float PLANE_VELOCITY_X = 20f;
 	private static final float PLANE_START_Y = 40f;
 	private static final float PLANE_START_X = 20f;
 	public static final float PLANE_WIDTH = 9;
 	public static final float PLANE_HEIGHT = 7.45f;
-	Animation plane;
+	private Animation animation;
 	
-	private Vector2 planePosition = new Vector2();
-	private Vector2 planeVelocity = new Vector2();
-	float planeStateTime = 0;
 	
-	Texture frame1, frame2, frame3;
-	private Rectangle body = new Rectangle();
+	private float stateTime = 0;
+	
+	private Texture frame1, frame2, frame3;
+	private Vector2 velocity = new Vector2();
 	
 	public Plane() {
+		super(PLANE_WIDTH, PLANE_HEIGHT, PLANE_WIDTH - 2.0f, PLANE_HEIGHT);
+		
 		frame1 = new Texture("plane1.png");
 		frame1.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		frame2 = new Texture("plane2.png");
 		frame3 = new Texture("plane3.png");
 		
 		
-		plane = new Animation(0.05f, new TextureRegion(frame1), new TextureRegion(frame2), new TextureRegion(frame3), new TextureRegion(frame2));
-		plane.setPlayMode(PlayMode.LOOP);
+		animation = new Animation(0.05f, new TextureRegion(frame1), new TextureRegion(frame2), new TextureRegion(frame3), new TextureRegion(frame2));
+		animation.setPlayMode(PlayMode.LOOP);
 		
 		reset();
 	}
@@ -47,44 +46,33 @@ public class Plane extends InputAdapter {
 	}
 	
 	public void reset() {
-		planeVelocity.set(0f, 0f);
-		planePosition.set(PLANE_START_X, PLANE_START_Y);
+		setVelocity(0.0f, 0.0f);
+		setPosition(PLANE_START_X, PLANE_START_Y);
 	}
 	
-	public void setPosition(float x, float y) {
-		planePosition.set(x, y);
+	public Vector2 getVelocity() {
+		return velocity;
 	}
 	
 	public void setVelocity(float x, float y) {
-		planeVelocity.set(0,0);
-	}
-	
-	public Vector2 getPosition() {
-		return planePosition;
-	}
-	
-	public Rectangle getBody() {
-		return body;
+		velocity.x = x;
+		velocity.y = y;
 	}
 	
 	public void update(float delta) {
-		planeStateTime += delta;
-		planeVelocity.add(GRAVITY);
-		planePosition.mulAdd(planeVelocity, delta);
+		stateTime += delta;
 		
-		body.set(planePosition.x + 2, planePosition.y, PLANE_WIDTH - 2, PLANE_HEIGHT);
+		Vector2 position = getPosition();
+		
+		velocity.add(GRAVITY);
+		position.mulAdd(velocity, delta);
+
+		super.update(delta);
 	}
 	
+	@Override
 	public void draw(SpriteBatch batch) {
-		batch.draw(
-			plane.getKeyFrame(planeStateTime), 
-			planePosition.x, planePosition.y, 
-			PLANE_WIDTH, PLANE_HEIGHT);
-	}
-	
-	public boolean touchDown (int screenX, int screenY, int pointer, int button) {
-		planeVelocity.set(PLANE_VELOCITY_X, PLANE_JUMP_IMPULSE);
-		
-		return true;
+		setRegion(animation.getKeyFrame(stateTime));
+		super.draw(batch);
 	}
 }

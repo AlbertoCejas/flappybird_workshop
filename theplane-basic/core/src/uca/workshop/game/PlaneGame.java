@@ -11,17 +11,17 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import uca.workshop.game.Map.Rock;
 
 public class PlaneGame extends ApplicationAdapter {
 	
 	static enum GameState {
-		Start, Running, GameOver
+		Start,
+		Running,
+		GameOver
 	}
 	
 	private static final int SCENE_WIDTH = 80;
@@ -29,14 +29,15 @@ public class PlaneGame extends ApplicationAdapter {
 	
 	private SpriteBatch batch;
 	private Viewport viewport;
-	private Viewport viewport2;
+	private Viewport uiViewport;
 	private OrthographicCamera camera;
-	private OrthographicCamera UIcamera;
+	private OrthographicCamera uiCamera;
 	
 	private GameState gameState = GameState.Start;
 	
 	private Plane plane;
 	private Map map;
+	private PlaneController planeController;
 	
 	private float groundOffsetX = 0;
 	
@@ -45,8 +46,6 @@ public class PlaneGame extends ApplicationAdapter {
 	private BitmapFont font;
 	private int score = 0;
 	
-	private Rectangle body1, body2 = new Rectangle();
-	
 	private Music music;
 	private Sound explode;
 	
@@ -54,19 +53,19 @@ public class PlaneGame extends ApplicationAdapter {
 	public void create () {
 		batch = new SpriteBatch();
 		camera = new OrthographicCamera();
-		UIcamera = new OrthographicCamera();
+		uiCamera = new OrthographicCamera();
 		viewport = new FitViewport(SCENE_WIDTH, SCENE_HEIGHT, camera);
-		viewport2 = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), UIcamera);
+		uiViewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), uiCamera);
 		
 		camera.position.x += SCENE_WIDTH*.5f;
 		camera.position.y += SCENE_HEIGHT*.5f;
 		camera.update();
 		
-		UIcamera.position.x += Gdx.graphics.getWidth()*.5f;
-		UIcamera.position.y += Gdx.graphics.getHeight()*.5f;
-		UIcamera.update();
+		uiCamera.position.x += Gdx.graphics.getWidth()*.5f;
+		uiCamera.position.y += Gdx.graphics.getHeight()*.5f;
+		uiCamera.update();
 		
-		// Initialize font to draw the UI
+		// Initialise font to draw the UI
 		font = new BitmapFont(Gdx.files.internal("arial.fnt"));
 		font.setColor(Color.BLACK);
 		
@@ -77,6 +76,7 @@ public class PlaneGame extends ApplicationAdapter {
 		
 		// Create game entities
 		plane = new Plane();
+		planeController = new PlaneController(plane);
 		map = new Map();
 		
 		// Music
@@ -102,7 +102,7 @@ public class PlaneGame extends ApplicationAdapter {
 	@Override
 	public void resize(int width, int height) {
 		viewport.update(width, height);
-		viewport2.update(width, height);
+		uiViewport.update(width, height);
 	}
 	
 	public void reset() {
@@ -114,7 +114,6 @@ public class PlaneGame extends ApplicationAdapter {
 		
 		plane.reset();
 		map.reset();
-		
 	}
 	
 	public void update() {
@@ -124,7 +123,7 @@ public class PlaneGame extends ApplicationAdapter {
 		if(Gdx.input.justTouched()) {
 			if(gameState == GameState.Start) {
 				gameState = GameState.Running;
-				Gdx.input.setInputProcessor(plane);
+				Gdx.input.setInputProcessor(planeController);
 				plane.setVelocity(Plane.PLANE_VELOCITY_X, 0);
 			}
 			if(gameState == GameState.GameOver) {
@@ -148,7 +147,6 @@ public class PlaneGame extends ApplicationAdapter {
 			plane.update(delta);
 			
 			// Check collisions - Takes advantage of the upcoming loop to avoid looping twice
-			body1 = plane.getBody();
 			
 			// Update UI
 			// Update score from rocks
@@ -156,8 +154,7 @@ public class PlaneGame extends ApplicationAdapter {
 			
 			for(Rock r : rocks) {
 				// Check collisions with rocks
-				body2.set(r.position.x + (Map.Rock.ROCK_WIDTH - 3f) / 2 + 1, r.position.y, 2f, Map.Rock.ROCK_HEIGHT - 1.25f);
-				if(body1.overlaps(body2)) {
+				if (Entity.collide(r, plane)) {
 					if(gameState != GameState.GameOver)
 						explode.play();
 					
@@ -167,7 +164,7 @@ public class PlaneGame extends ApplicationAdapter {
 				}
 				
 				// Check if score should be raised by 1
-				if(r.position.x < plane.getPosition().x && !r.counted) {
+				if(r.getPosition().x < plane.getPosition().x && !r.counted) {
 					score++;
 					r.counted = true;
 				}
@@ -202,7 +199,7 @@ public class PlaneGame extends ApplicationAdapter {
 		batch.end();
 		
 		// Draw score
-		batch.setProjectionMatrix(UIcamera.combined);
+		batch.setProjectionMatrix(uiCamera.combined);
 		batch.begin();
 		if(gameState == GameState.Start) {
 			batch.draw(ready, Gdx.graphics.getWidth() / 2 - readyRegion.getRegionWidth() / 2, Gdx.graphics.getHeight() / 2 - readyRegion.getRegionHeight() / 2);
