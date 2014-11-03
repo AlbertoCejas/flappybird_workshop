@@ -117,73 +117,19 @@ public class PlaneGame extends ApplicationAdapter {
 	}
 	
 	public void update() {
-		
-		float delta = Gdx.graphics.getDeltaTime();
-
-		if(Gdx.input.justTouched()) {
-			if(gameState == GameState.Start) {
-				gameState = GameState.Running;
-				Gdx.input.setInputProcessor(planeController);
-				plane.setVelocity(Plane.PLANE_VELOCITY_X, 0);
-			}
-			if(gameState == GameState.GameOver) {
-				gameState = GameState.Start;
-				reset();
-			}
-		}
-		
-		// Keeps the camera focusing the plane
-		camera.position.x = plane.getPosition().x + 20f;
-		camera.update();
-		
-		if(gameState == GameState.Running) {	
-			// Stores the X distance made by the plane
-			if(camera.position.x - groundOffsetX > SCENE_WIDTH + 40) {
-				groundOffsetX += SCENE_WIDTH;
-			}
-			
-			// Update game entities
-			map.update(camera.position.x);
-			plane.update(delta);
-			
-			// Check collisions - Takes advantage of the upcoming loop to avoid looping twice
-			
-			// Update UI
-			// Update score from rocks
-			Array<Rock> rocks = map.getRocks();
-			
-			for(Rock r : rocks) {
-				// Check collisions with rocks
-				if (Entity.collide(r, plane)) {
-					if(gameState != GameState.GameOver)
-						explode.play();
-					
-					Gdx.input.setInputProcessor(null);
-					gameState = GameState.GameOver;
-					plane.setVelocity(0,0);	
-				}
-				
-				// Check if score should be raised by 1
-				if(r.getPosition().x < plane.getPosition().x && !r.counted) {
-					score++;
-					r.counted = true;
-				}
-			}
-			
-			Vector2 position = plane.getPosition();
-			
-			if(position.y < Map.GROUND_HEIGHT - 2 || 
-				position.y + Plane.PLANE_HEIGHT > SCENE_HEIGHT - Map.GROUND_HEIGHT + 2) {
-					if(gameState != GameState.GameOver) 
-						explode.play();
-				
-				Gdx.input.setInputProcessor(null);
-				gameState = GameState.GameOver;
-				plane.setVelocity(0,0);
-			}
+		switch(gameState) {
+		case Start:
+			updateStart();
+			break;
+		case Running:
+			updateRunning();
+			break;
+		case GameOver:
+			updateGameOver();
+			break;
 		}
 	}
-	
+
 	@Override
 	public void render () {
 		Gdx.gl.glClearColor(1, 0, 0, 1);
@@ -191,14 +137,11 @@ public class PlaneGame extends ApplicationAdapter {
 		
 		update();
 		
-		// Draw world
-		batch.setProjectionMatrix(camera.combined);
-		batch.begin();
-		map.draw(batch, camera.position.x - SCENE_WIDTH*.5f, groundOffsetX);
-		plane.draw(batch);
-		batch.end();
-		
-		// Draw score
+		drawWorld();
+		drawUI();
+	}
+
+	private void drawUI() {
 		batch.setProjectionMatrix(uiCamera.combined);
 		batch.begin();
 		if(gameState == GameState.Start) {
@@ -211,6 +154,85 @@ public class PlaneGame extends ApplicationAdapter {
 			font.draw(batch, "" + score, Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() - 60);
 		}
 		batch.end();
+	}
 
+	private void drawWorld() {
+		batch.setProjectionMatrix(camera.combined);
+		batch.begin();
+		map.draw(batch, camera.position.x - SCENE_WIDTH*.5f, groundOffsetX);
+		plane.draw(batch);
+		batch.end();
+	}
+	
+	private void updateGameOver() {
+		if(Gdx.input.justTouched()) {
+			gameState = GameState.Start;
+			reset();
+		}
+	}
+
+	private void updateRunning() {
+		float delta = Gdx.graphics.getDeltaTime();
+		
+		updateCamera();
+		
+		// Stores the X distance made by the plane
+		if(camera.position.x - groundOffsetX > SCENE_WIDTH + 40) {
+			groundOffsetX += SCENE_WIDTH;
+		}
+		
+		// Update game entities
+		map.update(camera.position.x);
+		plane.update(delta);
+		
+		checkCollisions();
+	}
+	
+	private void updateStart() {
+		if(Gdx.input.justTouched()) {
+			gameState = GameState.Running;
+			Gdx.input.setInputProcessor(planeController);
+			plane.setVelocity(Plane.PLANE_VELOCITY_X, 0);
+		}
+	}
+
+	private void checkCollisions() {
+		Vector2 planePosition = plane.getPosition();
+		
+		Array<Rock> rocks = map.getRocks();
+		
+		for(Rock r : rocks) {
+			// Check collisions with rocks
+			if (Entity.collide(r, plane)) {
+				if(gameState != GameState.GameOver)
+					explode.play();
+				
+				Gdx.input.setInputProcessor(null);
+				gameState = GameState.GameOver;
+				plane.setVelocity(0,0);	
+			}
+			
+			// Check if score should be raised by 1
+			if(r.getPosition().x < planePosition.x && !r.counted) {
+				score++;
+				r.counted = true;
+			}
+		}
+		
+		// Ground Collision
+		if(planePosition.y < Map.GROUND_HEIGHT - 2 || 
+			planePosition.y + Plane.PLANE_HEIGHT > SCENE_HEIGHT - Map.GROUND_HEIGHT + 2) {
+				if(gameState != GameState.GameOver) 
+					explode.play();
+			
+			Gdx.input.setInputProcessor(null);
+			gameState = GameState.GameOver;
+			plane.setVelocity(0,0);
+		}
+	}
+
+	private void updateCamera() {
+		camera.position.x = plane.getPosition().x + 20f;
+		camera.update();
 	}
 }
