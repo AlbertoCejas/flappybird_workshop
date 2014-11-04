@@ -9,18 +9,16 @@ import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 import com.badlogic.gdx.math.Vector2;
 
 public class Plane extends Entity {
-	private static final Vector2 GRAVITY = new Vector2 (0,-1f);
-	
 	public static final float PLANE_VELOCITY_X = 20f;
-	private static final float PLANE_START_Y = 40f;
-	private static final float PLANE_START_X = 20f;
 	public static final float PLANE_WIDTH = 9;
 	public static final float PLANE_HEIGHT = 7.45f;
+	
+	private static final float PLANE_START_Y = 40f;
+	private static final float PLANE_START_X = 20f;
+	private static final Vector2 GRAVITY = new Vector2 (0,-1f);
+	
 	private Animation animation;
-	
-	
 	private float stateTime = 0;
-	
 	private Texture frame1, frame2, frame3;
 	private Vector2 velocity = new Vector2();
 	
@@ -49,11 +47,7 @@ public class Plane extends Entity {
 		setVelocity(0.0f, 0.0f);
 		setPosition(PLANE_START_X, PLANE_START_Y);
 	}
-	
-	public Vector2 getVelocity() {
-		return velocity;
-	}
-	
+
 	public void setVelocity(float x, float y) {
 		velocity.x = x;
 		velocity.y = y;
