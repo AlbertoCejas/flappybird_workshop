@@ -2,7 +2,9 @@ package uca.workshop.game;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 
 public class Entity {
@@ -10,17 +12,15 @@ public class Entity {
 	private TextureRegion region;
 	private float width;
 	private float height;
-	private Rectangle body;
+	private Polygon body;
 	
-	public Entity(float width, float height, float boundsWidth, float boundsHeight) {
+	public Entity(float width, float height, Polygon shape) {
 		this.position = new Vector2();
-		this.body = new Rectangle();
+		this.body = shape;
 		this.width = width;
 		this.height = height;
 		
-		this.body.setSize(boundsWidth, boundsHeight);
-		
-		updateBody();
+		body.setOrigin(width*0.5f, height*0.5f);
 	}
 	
 	public Vector2 getPosition() {
@@ -30,14 +30,30 @@ public class Entity {
 	public void setPosition(float x, float y) {
 		position.x = x;
 		position.y = y;
+		body.setPosition(x, y);
+	}
+	
+	public void translate(float x, float y) {
+		position.x += x;
+		position.y += y;
+		
+		body.translate(x, y);
+	}
+	
+	public Polygon getPolygon() {
+		return body;
+	}
+	
+	public float getRotation() {
+		return body.getRotation();
+	}
+	
+	public void setRotation(float degrees) {
+		body.setRotation(degrees);
 	}
 	
 	public void setRegion(TextureRegion region) {
 		this.region = region;
-	}
-	
-	public void update(float delta) {
-		updateBody();
 	}
 	
 	public void draw(SpriteBatch batch) {
@@ -51,13 +67,12 @@ public class Entity {
 			width, height);
 	}
 	
-	private void updateBody() {
-		float paddingX = width - body.width;
-		float paddingY = height - body.height;
-		body.setPosition(position.x + paddingX, position.y + paddingY);
+	//Assumes shaperenderer line's begin() has been called
+	public void debug(ShapeRenderer sr) {
+		sr.polygon(body.getTransformedVertices());
 	}
 	
 	public static boolean collide(Entity e1, Entity e2) {
-		return e1.body.overlaps(e2.body);
+		return Intersector.overlapConvexPolygons(e1.body, e2.body);
 	}
 }

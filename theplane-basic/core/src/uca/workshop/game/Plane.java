@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 
 public class Plane extends Entity {
@@ -23,7 +24,7 @@ public class Plane extends Entity {
 	private Vector2 velocity = new Vector2();
 	
 	public Plane() {
-		super(PLANE_WIDTH, PLANE_HEIGHT, PLANE_WIDTH - 2.0f, PLANE_HEIGHT);
+		super(PLANE_WIDTH, PLANE_HEIGHT, createShape());
 		
 		frame1 = new Texture("plane1.png");
 		frame1.setFilter(TextureFilter.Linear, TextureFilter.Linear);
@@ -56,17 +57,33 @@ public class Plane extends Entity {
 	public void update(float delta) {
 		stateTime += delta;
 		
-		Vector2 position = getPosition();
-		
-		velocity.add(GRAVITY);
-		position.mulAdd(velocity, delta);
-
-		super.update(delta);
+		Vector2 vel = new Vector2(velocity.add(GRAVITY));
+		vel.scl(delta);
+		translate(vel.x, vel.y);
 	}
 	
 	@Override
 	public void draw(SpriteBatch batch) {
 		setRegion(animation.getKeyFrame(stateTime));
 		super.draw(batch);
+	}
+	
+	private static Polygon createShape() {
+		float[] vertices = new float[8];
+		
+		// Left bottom corner
+		vertices[0] = 1f;
+		vertices[1] = 0f;
+		// Top left corner
+		vertices[2] = 1f;
+		vertices[3] = PLANE_HEIGHT;
+		// Top right corner
+		vertices[4] = PLANE_WIDTH - 1f;
+		vertices[5] = PLANE_HEIGHT;
+		// Right bottom corner
+		vertices[6] = PLANE_WIDTH - 1f;
+		vertices[7] = 0f;
+		
+		return new Polygon(vertices);
 	}
 }

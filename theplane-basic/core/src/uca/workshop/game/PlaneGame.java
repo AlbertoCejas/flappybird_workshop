@@ -2,6 +2,7 @@ package uca.workshop.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
@@ -11,6 +12,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -49,6 +52,9 @@ public class PlaneGame extends ApplicationAdapter {
 	private Music music;
 	private Sound explode;
 	
+	private boolean debugOn = false;
+	private ShapeRenderer sr;
+	
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
@@ -84,7 +90,10 @@ public class PlaneGame extends ApplicationAdapter {
 		music.setLooping(true);
 		music.play();
 		
+		// Sound effect played when the plane collides
 		explode = Gdx.audio.newSound(Gdx.files.internal("explode.wav"));
+				
+		sr = new ShapeRenderer();
 	}
 
 	@Override
@@ -97,6 +106,7 @@ public class PlaneGame extends ApplicationAdapter {
 		font.dispose();
 		music.dispose();
 		explode.dispose();
+		sr.dispose();
 	}
 	
 	@Override
@@ -138,9 +148,22 @@ public class PlaneGame extends ApplicationAdapter {
 		update();
 		
 		drawWorld();
+		drawDebug();
 		drawUI();
 	}
 
+	private void drawDebug() {
+		if(debugOn) {
+			sr.setProjectionMatrix(camera.combined);
+			sr.begin(ShapeType.Line);
+			plane.debug(sr);
+			for(Rock r : map.getRocks()) {
+				r.debug(sr);
+			}
+			sr.end();
+		}
+	}
+	
 	private void drawUI() {
 		batch.setProjectionMatrix(uiCamera.combined);
 		batch.begin();
@@ -175,6 +198,10 @@ public class PlaneGame extends ApplicationAdapter {
 		float delta = Gdx.graphics.getDeltaTime();
 		
 		updateCamera();
+		
+		// Enables debug lines
+		if(Gdx.input.isKeyJustPressed(Input.Keys.D))
+			debugOn = !debugOn;
 		
 		// Stores the X distance made by the plane
 		if(camera.position.x - groundOffsetX > SCENE_WIDTH + 40) {

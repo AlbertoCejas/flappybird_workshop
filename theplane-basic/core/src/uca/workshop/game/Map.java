@@ -44,6 +44,7 @@ public class Map {
 			boolean isDown = MathUtils.randomBoolean();
 			Rock rock = new Rock(60 + i * 25, isDown?60-30: 0);
 			rock.setRegion(isDown? rockDownRegion: rockRegion);
+			rock.setRotation(isDown? 180f : 0f);
 			rocks.add(rock);
 		}
 	}
@@ -59,13 +60,12 @@ public class Map {
 			Vector2 position = r.getPosition();
 			if(cameraPosX - position.x > 40 + Rock.ROCK_WIDTH) {
 				boolean isDown = MathUtils.randomBoolean();
-				position.x += 5 * 25;
-				position.y = isDown?60-30: 0;
+				r.setRotation(0f); // Reset orientation
+				r.setPosition(position.x + 5 * 25, isDown?60-30: 0);
 				r.setRegion(isDown? rockDownRegion: rockRegion);
+				r.setRotation(isDown? 180f : 0f);
 				r.counted = false;
 			}
-			
-			r.update(0.0f);
 		}
 	}
 	
