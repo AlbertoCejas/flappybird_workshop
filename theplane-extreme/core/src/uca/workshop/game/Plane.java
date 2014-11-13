@@ -1,41 +1,39 @@
 package uca.workshop.game;
 
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
-import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 
-public class Plane extends InputAdapter {
-	private static final Vector2 GRAVITY = new Vector2 (0,-1f);
-	private static final float PLANE_JUMP_IMPULSE = 27f;
-	private static final float PLANE_START_Y = 40f;
-	private static final float PLANE_START_X = 20f;
+public class Plane extends Entity {
 	public static final float PLANE_WIDTH = 9;
 	public static final float PLANE_HEIGHT = 7.45f;
-	public static float plane_velocity_x = 20f;
 	
-	private Vector2 planePosition = new Vector2();
-	private Vector2 planeVelocity = new Vector2();
-	private float planeStateTime = 0;
+	private static final float PLANE_START_Y = 40f;
+	private static final float PLANE_START_X = 20f;
+	private static final Vector2 GRAVITY = new Vector2 (0,-1f);
 	
-	private Animation plane;
+	private float plane_velocity_x = 20f;
+	private Animation animation;
+	private float stateTime = 0;
 	private Texture frame1, frame2, frame3;
-	private Rectangle body = new Rectangle();
+	private Vector2 velocity = new Vector2();
 	
 	public Plane() {
+		super(PLANE_WIDTH, PLANE_HEIGHT, createShape());
+		
 		frame1 = new Texture("plane1.png");
 		frame1.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		frame2 = new Texture("plane2.png");
 		frame3 = new Texture("plane3.png");
 		
 		
-		plane = new Animation(0.05f, new TextureRegion(frame1), new TextureRegion(frame2), new TextureRegion(frame3), new TextureRegion(frame2));
-		plane.setPlayMode(PlayMode.LOOP);
+		animation = new Animation(0.05f, new TextureRegion(frame1), new TextureRegion(frame2), new TextureRegion(frame3), new TextureRegion(frame2));
+		animation.setPlayMode(PlayMode.LOOP);
 		
 		reset();
 	}
@@ -48,44 +46,54 @@ public class Plane extends InputAdapter {
 	
 	public void reset() {
 		plane_velocity_x = 20f;
-		planeVelocity.set(0f, 0f);
-		planePosition.set(PLANE_START_X, PLANE_START_Y);
+		setVelocity(0.0f, 0.0f);
+		setPosition(PLANE_START_X, PLANE_START_Y);
 	}
-	
-	public void setPosition(float x, float y) {
-		planePosition.set(x, y);
-	}
-	
+
 	public void setVelocity(float x, float y) {
-		planeVelocity.set(0,0);
+		velocity.x = x;
+		velocity.y = y;
 	}
 	
-	public Vector2 getPosition() {
-		return planePosition;
+	public float getEngineXForce() {
+		return plane_velocity_x;
 	}
 	
-	public Rectangle getBody() {
-		return body;
+	public void increaseEngineXForce(float x) {
+		if(plane_velocity_x < 35f)
+			plane_velocity_x += x;
 	}
 	
 	public void update(float delta) {
-		planeStateTime += delta;
-		planeVelocity.add(GRAVITY);
-		planePosition.mulAdd(planeVelocity, delta);
+		stateTime += delta;
 		
-		body.set(planePosition.x + 2, planePosition.y, PLANE_WIDTH - 2, PLANE_HEIGHT);
+		Vector2 vel = new Vector2(velocity.add(GRAVITY));
+		vel.scl(delta);
+		translate(vel.x, vel.y);
 	}
 	
+	@Override
 	public void draw(SpriteBatch batch) {
-		batch.draw(
-			plane.getKeyFrame(planeStateTime), 
-			planePosition.x, planePosition.y, 
-			PLANE_WIDTH, PLANE_HEIGHT);
+		setRegion(animation.getKeyFrame(stateTime));
+		super.draw(batch);
 	}
 	
-	public boolean touchDown (int screenX, int screenY, int pointer, int button) {
-		planeVelocity.set(plane_velocity_x, PLANE_JUMP_IMPULSE);
+	private static Polygon createShape() {
+		float[] vertices = new float[8];
 		
-		return true;
+		// Left bottom corner
+		vertices[0] = 1f;
+		vertices[1] = 0f;
+		// Top left corner
+		vertices[2] = 1f;
+		vertices[3] = PLANE_HEIGHT;
+		// Top right corner
+		vertices[4] = PLANE_WIDTH - 1f;
+		vertices[5] = PLANE_HEIGHT;
+		// Right bottom corner
+		vertices[6] = PLANE_WIDTH - 1f;
+		vertices[7] = 0f;
+		
+		return new Polygon(vertices);
 	}
 }

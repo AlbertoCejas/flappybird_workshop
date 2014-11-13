@@ -8,21 +8,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
 public class Map {
-	
-	static class Rock {
-		public static final float ROCK_WIDTH = 13.55f;
-		public static final float ROCK_HEIGHT = 30f;
-		Vector2 position = new Vector2();
-		TextureRegion image;
-		boolean counted;
-		
-		public Rock(float x, float y, TextureRegion image) {
-			this.position.x = x;
-			this.position.y = y;
-			this.image = image;
-		}
-	}
-	
 	private Array<Rock> rocks = new Array<Rock>();
 	private Texture background, ground, rock;
 	private TextureRegion groundRegion, ceilingRegion, rockRegion, rockDownRegion;
@@ -57,7 +42,10 @@ public class Map {
 		rocks.clear();
 		for(int i = 0; i < 5; i++) {
 			boolean isDown = MathUtils.randomBoolean();
-			rocks.add(new Rock(60 + i * 25, isDown?60-30: 0, isDown? rockDownRegion: rockRegion));
+			Rock rock = new Rock(60 + i * 25, isDown?60-30: 0);
+			rock.setRegion(isDown? rockDownRegion: rockRegion);
+			rock.setRotation(isDown? 180f : 0f);
+			rocks.add(rock);
 		}
 	}
 	
@@ -69,11 +57,13 @@ public class Map {
 		
 		// Place already shown rocks in the next scene
 		for(Rock r: rocks) {
-			if(cameraPosX - r.position.x > 40 + Rock.ROCK_WIDTH) {
+			Vector2 position = r.getPosition();
+			if(cameraPosX - position.x > 40 + Rock.ROCK_WIDTH) {
 				boolean isDown = MathUtils.randomBoolean();
-				r.position.x += 5 * 25;
-				r.position.y = isDown?60-30: 0;
-				r.image = isDown? rockDownRegion: rockRegion;
+				r.setRotation(0f); // Reset orientation
+				r.setPosition(position.x + 5 * 25, isDown?60-30: 0);
+				r.setRegion(isDown? rockDownRegion: rockRegion);
+				r.setRotation(isDown? 180f : 0f);
 				r.counted = false;
 			}
 		}
@@ -88,10 +78,7 @@ public class Map {
 		
 		// Draw rocks
 		for(Rock rockEntity : rocks) {
-			batch.draw(
-				rockEntity.image, 
-				rockEntity.position.x, rockEntity.position.y, 
-				Rock.ROCK_WIDTH, Rock.ROCK_HEIGHT);
+			rockEntity.draw(batch);
 		}
 		
 		// Draw current ground sprite and next one to keep it smooth
