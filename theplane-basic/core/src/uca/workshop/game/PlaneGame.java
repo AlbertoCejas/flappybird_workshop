@@ -45,7 +45,6 @@ public class PlaneGame extends ApplicationAdapter {
 	private float groundOffsetX = 0;
 	
 	private Texture ready, gameOver;
-	private TextureRegion readyRegion, gameOverRegion;
 	private BitmapFont font;
 	private int score = 0;
 	
@@ -63,13 +62,8 @@ public class PlaneGame extends ApplicationAdapter {
 		viewport = new FitViewport(SCENE_WIDTH, SCENE_HEIGHT, camera);
 		uiViewport = new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), uiCamera);
 		
-		camera.position.x += SCENE_WIDTH*.5f;
-		camera.position.y += SCENE_HEIGHT*.5f;
-		camera.update();
-		
-		uiCamera.position.x += Gdx.graphics.getWidth()*.5f;
-		uiCamera.position.y += Gdx.graphics.getHeight()*.5f;
-		uiCamera.update();
+		viewport.update(SCENE_WIDTH, SCENE_HEIGHT, true);
+		uiViewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
 		
 		// Initialise font to draw the UI
 		font = new BitmapFont(Gdx.files.internal("arial.fnt"));
@@ -77,8 +71,6 @@ public class PlaneGame extends ApplicationAdapter {
 		
 		ready = new Texture("ready.png");
 		gameOver = new Texture("gameover.png");
-		readyRegion = new TextureRegion(ready);
-		gameOverRegion = new TextureRegion(gameOver);
 		
 		// Create game entities
 		plane = new Plane();
@@ -168,13 +160,13 @@ public class PlaneGame extends ApplicationAdapter {
 		batch.setProjectionMatrix(uiCamera.combined);
 		batch.begin();
 		if(gameState == GameState.Start) {
-			batch.draw(ready, Gdx.graphics.getWidth() / 2 - readyRegion.getRegionWidth() / 2, Gdx.graphics.getHeight() / 2 - readyRegion.getRegionHeight() / 2);
+			batch.draw(ready, uiViewport.getWorldWidth() / 2 - ready.getWidth() / 2, uiViewport.getWorldHeight() / 2 - ready.getHeight() / 2);
 		}
 		if(gameState == GameState.GameOver) {
-			batch.draw(gameOver, Gdx.graphics.getWidth() / 2 - gameOverRegion.getRegionWidth() / 2, Gdx.graphics.getHeight() / 2 - gameOverRegion.getRegionHeight() / 2);
+			batch.draw(gameOver, uiViewport.getWorldWidth() / 2 - gameOver.getWidth() / 2, uiViewport.getWorldHeight() / 2 - gameOver.getHeight() / 2);
 		}
 		if(gameState == GameState.GameOver || gameState == GameState.Running) {
-			font.draw(batch, "" + score, Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() - 60);
+			font.draw(batch, "" + score, uiViewport.getWorldWidth() / 2, uiViewport.getWorldHeight() - 60);
 		}
 		batch.end();
 	}
