@@ -47,7 +47,7 @@ public class PlaneGame extends ApplicationAdapter {
 		uiViewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
 		
 		// Load ready texture
-
+		ready = new Texture("ready.png");
 		
 		// Create game entities
 		map = new Map();
@@ -56,9 +56,8 @@ public class PlaneGame extends ApplicationAdapter {
 	@Override
 	public void dispose () {
 		batch.dispose();
-
-		
-		
+		map.dispose();
+		ready.dispose();
 	}
 	
 	@Override
@@ -76,9 +75,9 @@ public class PlaneGame extends ApplicationAdapter {
 	}
 
 	private void updateStart() {
-
-		
-
+		if(Gdx.input.justTouched()) {
+			gameState = GameState.Running;
+		}
 	}
 
 	@Override
@@ -96,7 +95,7 @@ public class PlaneGame extends ApplicationAdapter {
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 		
-
+		map.draw(batch, camera.position.x - SCENE_WIDTH*.5f);
 		
 		batch.end();
 	}
@@ -105,7 +104,9 @@ public class PlaneGame extends ApplicationAdapter {
 		batch.setProjectionMatrix(uiCamera.combined);
 		batch.begin();
 		
-
+		if(gameState == GameState.Start) {
+			batch.draw(ready, uiViewport.getWorldWidth() / 2 - ready.getWidth() / 2, uiViewport.getWorldHeight() / 2 - ready.getHeight() / 2);
+		}
 
 		batch.end();
 	}

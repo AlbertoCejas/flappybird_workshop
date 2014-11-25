@@ -9,7 +9,7 @@ public class Map {
 	private static final float BACKGROUND_HEIGHT = 60f;
 	
 	public Map() {
-
+		background = new Texture("background.png");
 	}
 	
 	public void dispose() {
@@ -18,9 +18,9 @@ public class Map {
 	
 	public void draw(SpriteBatch batch, float Xorigin) {
 		// Draw background
-
-		
-		
-		
+		batch.draw(
+				background, 
+				Xorigin, 0, 
+				BACKGROUND_WIDTH, BACKGROUND_HEIGHT);
 	}
 }
